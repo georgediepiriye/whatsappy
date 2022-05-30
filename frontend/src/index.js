@@ -9,8 +9,8 @@ import Register from "../src/pages/Register";
 ReactDOM.render(
   <Router>
     <Routes>
-      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Home />} />
       <Route path="/register" element={<Register />} />
     </Routes>
   </Router>,
