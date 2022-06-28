@@ -1,18 +1,19 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "../src/pages/Login";
 import Home from "../src/pages/Home";
 import Register from "../src/pages/Register";
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+root.render(
   <Router>
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Home />} />
+      <Route path="/chat" element={<Home />} />
       <Route path="/register" element={<Register />} />
     </Routes>
-  </Router>,
-  document.getElementById("root")
+  </Router>
 );

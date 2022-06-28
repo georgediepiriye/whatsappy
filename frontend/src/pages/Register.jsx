@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import CircularProgress from "@mui/material/CircularProgress";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Container = styled.div`
   display: flex;
@@ -112,44 +116,167 @@ const LastText = styled.h5`
   cursor: pointer;
 `;
 
+//register
 const Register = () => {
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [username, setUserame] = useState("");
+  const [fileInputState, setFileInputState] = useState("");
+  const [image, setImage] = useState(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    setFileInputState(e.target.value);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      setImage(reader.result);
+    };
+  };
+
+  //toast when passords dont match
+  const passwordMatch = () => {
+    toast.error("Both Passwords don't match!", {
+      position: toast.POSITION.TOP_CENTER,
+      autoClose: false,
+    });
+  };
+
+  //toast when registration is successfull
+  const notifySuccess = () => {
+    toast.success("Registration Successfull!", {
+      position: toast.POSITION.TOP_CENTER,
+      autoClose: false,
+    });
+  };
+
+  const Register = async (e) => {
+    e.preventDefault();
+
+    setIsRegistering(true);
+    if (!username || !name || !password) {
+      toast.error("Please enter all fields!", {
+        position: toast.POSITION.TOP_CENTER,
+        autoClose: false,
+      });
+      setIsRegistering(false);
+      return;
+    }
+    if (password !== confirmPassword) {
+      passwordMatch();
+      setIsRegistering(false);
+      return;
+    }
+
+    const newUser = { name, username, image, password };
+
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const res = await axios.post(
+        "http://localhost:5003/api/v1/users/register",
+        newUser,
+        config
+      );
+      if (res) {
+        notifySuccess();
+        localStorage.setItem("userInfo", JSON.stringify(res));
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <Container>
-      <Wrapper>
+      <ToastContainer />
+      <Wrapper onSubmit={Register}>
         <Heading>Sign Up</Heading>
         <InputContainer>
           <LabelContainer>
             <Label>Name</Label>
           </LabelContainer>
-          <Input type="text" required />
+          <Input
+            type="text"
+            id="name"
+            required
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+            }}
+          />
         </InputContainer>
         <InputContainer>
           <LabelContainer>
             <Label>Username</Label>
           </LabelContainer>
-          <Input type="text" required />
+          <Input
+            type="text"
+            required
+            id="username"
+            value={username}
+            onChange={(e) => {
+              setUserame(e.target.value);
+            }}
+          />
         </InputContainer>
 
         <InputContainer>
           <LabelContainer>
             <Label>Upload your Picture</Label>
           </LabelContainer>
-          <Input type="file" />
+          <Input
+            type="file"
+            id="image"
+            accept="image/*"
+            name="image"
+            value={fileInputState}
+            onChange={handleFileInputChange}
+          />
         </InputContainer>
         <InputContainer>
           <LabelContainer>
             <Label>Password</Label>
           </LabelContainer>
-          <Input type="password" />
+          <Input
+            type="password"
+            id="password"
+            required
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          />
         </InputContainer>
         <InputContainer>
           <LabelContainer>
             <Label>Confirm Password</Label>
           </LabelContainer>
-          <Input type="password" />
+          <Input
+            type="password"
+            id="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+            }}
+          />
         </InputContainer>
         <ButtonContainer>
-          <Button>Sign Up</Button>
+          {isRegistering ? (
+            <Button disabled>
+              <CircularProgress color="inherit" />
+            </Button>
+          ) : (
+            <Button type="submit">Sign Up</Button>
+          )}
         </ButtonContainer>
         <LastTextContainer>
           <Link to={"/login"} style={{ color: "white" }}>

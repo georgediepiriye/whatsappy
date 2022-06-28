@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import CircularProgress from "@mui/material/CircularProgress";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Container = styled.div`
   display: flex;
@@ -112,24 +116,97 @@ const Label = styled.h5`
 `;
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    if (!username || !password) {
+      toast.error("Please enter all fields!", {
+        position: toast.POSITION.TOP_CENTER,
+        autoClose: false,
+      });
+      setIsLoading(false);
+      return;
+    }
+    const user = { username, password };
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const res = await axios.post(
+        "http://localhost:5003/api/v1/users/login",
+        user,
+        config
+      );
+      if (res) {
+        notifySuccess();
+        localStorage.setItem("userInfo", JSON.stringify(res));
+        navigate("/chat");
+      }
+    } catch (error) {
+      toast.error(error.response.data.error, {
+        position: toast.POSITION.TOP_CENTER,
+        autoClose: false,
+      });
+      setIsLoading(false);
+    }
+  };
+
+  //toast when registration is successfull
+  const notifySuccess = () => {
+    toast.success("Login Successfull!", {
+      position: toast.POSITION.TOP_CENTER,
+      autoClose: false,
+    });
+  };
   return (
     <Container>
-      <Wrapper>
+      <ToastContainer />
+      <Wrapper onSubmit={handleSubmit}>
         <Heading>Login</Heading>
         <InputContainer>
           <LabelContainer>
             <Label>Username</Label>
           </LabelContainer>
-          <Input type="text" />
+          <Input
+            type="text"
+            required
+            id="username"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+            }}
+          />
         </InputContainer>
         <InputContainer>
           <LabelContainer>
             <Label>Password</Label>
           </LabelContainer>
-          <Input type="password" />
+          <Input
+            type="password"
+            id="password"
+            required
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          />
         </InputContainer>
         <ButtonContainer>
-          <Button>Login</Button>
+          {isLoading ? (
+            <Button disabled>
+              <CircularProgress color="inherit" />
+            </Button>
+          ) : (
+            <Button type="submit">Login</Button>
+          )}
         </ButtonContainer>
         <LastTextContainer>
           <Link to={"/register"} style={{ color: "white" }}>
